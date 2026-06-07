@@ -1,6 +1,4 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import html2canvas from "html2canvas";
-import React, { useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import type { IStories } from "../stories/stories.view.component";
 import { getWordCount } from "../stories/stories.utils";
@@ -122,6 +120,7 @@ const StoryTradingCard: React.FC<StoryTradingCardProps> = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const rarity = getStoryCardRarity(story.content);
   const [isBookmarked, setIsBookmarked] = useState(() => isSessionBookmarked(story.uuid));
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleBookmarkChange = () => {
@@ -141,6 +140,17 @@ const StoryTradingCard: React.FC<StoryTradingCardProps> = ({
   const genreClass =
     genreColorMap[genre.toLowerCase()] ||
     "bg-purple-500/20 text-purple-100 border-purple-300/40";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(cleanText(story.content));
+      setCopied(true);
+      toast.success("Story copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy story.");
+    }
+  };
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
@@ -284,9 +294,24 @@ const StoryTradingCard: React.FC<StoryTradingCardProps> = ({
 
             <div className="flex flex-1 flex-col px-4 pb-4">
             <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
-                Key Quote
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+                  Key Quote
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label="Copy story to clipboard"
+                  className="flex items-center justify-center w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 active:scale-95 transition-all focus:outline-none focus:ring-1 focus:ring-white/40"
+                  title={copied ? "Copied!" : "Copy story"}
+                >
+                  {copied ? (
+                    <i className="fa-solid fa-check text-emerald-400 text-[10px]"></i>
+                  ) : (
+                    <i className="fa-regular fa-clipboard text-white/60 text-[10px]"></i>
+                  )}
+                </button>
+              </div>
               <p className="mt-2 line-clamp-4 text-sm font-medium italic leading-6 text-slate-100">
                 "{keyQuote}"
               </p>
@@ -329,6 +354,24 @@ const StoryTradingCard: React.FC<StoryTradingCardProps> = ({
 
       {!compact && (
         <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-label="Copy story to clipboard"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-slate-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-600"
+          >
+            {copied ? (
+              <>
+                <i className="fa-solid fa-check text-emerald-400"></i>
+                Copied!
+              </>
+            ) : (
+              <>
+                <i className="fa-regular fa-clipboard"></i>
+                Copy Story
+              </>
+            )}
+          </button>
           <button
             type="button"
             onClick={handleDownload}
